@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <netinet/in_systm.h>
 #include <libnet/libnet-macros.h>
+#define LIBNET_LIL_ENDIAN 1
 #include <libnet/libnet-headers.h>
 
 #include <libnetfilter_queue/libnetfilter_queue.h>
@@ -29,8 +30,7 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 	ret = nfq_get_payload(tb, &data);
 	if(ret >= 0) {
 		struct libnet_ipv4_hdr* ipH = (struct libnet_ipv4_hdr *) data;
-//		data += (ipH->ip_hl)*4;
-		data += sizeof(struct libnet_ipv4_hdr);
+		data += (ipH->ip_hl)*4;
 		if(ipH->ip_p == 6){
 			struct libnet_tcp_hdr* tcpH = (struct libnet_tcp_hdr *) data;
 			if((ntohs(tcpH->th_sport) == 80) || (ntohs(tcpH->th_dport) == 80)) {
