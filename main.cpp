@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <linux/types.h>
-#include <linux/netfilter.h>        /* for NF_ACCEPT */
+#include <linux/netfilter.h>
 #include <errno.h>
 #include <arpa/inet.h>
 #include <netinet/in_systm.h>
@@ -31,9 +31,9 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 		struct libnet_ipv4_hdr* ipH = (struct libnet_ipv4_hdr *) data;
 //		data += (ipH->ip_hl)*4;
 		data += sizeof(struct libnet_ipv4_hdr);
-		if(ipH->ip_p == 80){
+		if(ipH->ip_p == 6){
 			struct libnet_tcp_hdr* tcpH = (struct libnet_tcp_hdr *) data;
-			if(ntohs(tcpH->th_sport == 80) || ntohs(tcpH->th_dport == 80)) {
+			if((ntohs(tcpH->th_sport) == 80) || (ntohs(tcpH->th_dport) == 80)) {
 				a = NF_DROP;
 			}
 			else	a = NF_ACCEPT;
