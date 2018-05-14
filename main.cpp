@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h>					//strncmp
+#include <string>					//std::string
+#include <regex>					//std::regex
 #include <string.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -15,8 +17,7 @@
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
 using namespace std;
-
-u_int16_t a = NF_ACCEPT;
+u_int8_t NF_flag = NF_ACCEPT;
 
 void dump(unsigned char* buf, int size) {
     int i;
@@ -33,6 +34,7 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 	struct nfqnl_msg_packet_hdr *ph;
 	int ret;
 	unsigned char *data;
+	NF_flag = NF_ACCEPT;
 
 	ph = nfq_get_msg_packet_hdr(tb);
     	if (ph) {
@@ -42,20 +44,20 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 	ret = nfq_get_payload(tb, &data);
 	if(ret >= 0) {
 		struct libnet_ipv4_hdr* ipH = (struct libnet_ipv4_hdr *) data;
-		data += (ipH->ip_hl)*4;
 		if(ipH->ip_p == 6){
+			data += (ipH->ip_hl)*4;
 			struct libnet_tcp_hdr* tcpH = (struct libnet_tcp_hdr *) data;
 			u_int16_t len = (ipH->ip_hl * 4)+(tcpH->th_off * 4);
 			data += (tcpH->th_off * 4);
-			if()
-			u_int16_t count = 50;
-			if(ipH->ip_len - len < count) count = ipH->ip_len - len;
-			dump(data, count);
-			printf("\n");
+			string s_data, check_host;
+			s_data = (char*) data;
+			check_host = "test.gilgil.net";
+			regex check("Host: (test.gilgil.net)");
+			smatch host;
 
-			printf("%s\n", data);
-			char* host = strstr((char *)data, "Host: ");
-
+			if(regex_search(s_data, host, check) && !check_host.compare(host[1])){
+				NF_flag = NF_DROP;
+			}
 		}
 	}
 
@@ -67,10 +69,10 @@ static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 {
     u_int32_t id = print_pkt(nfa);
 
-	if(a == NF_DROP) printf("******* TCP Port 80 black *******\n");
+	if(NF_flag == NF_DROP) printf("******* test.gilgil.net black *******\n");
     	else printf("entering callback\n");
 
-    	return nfq_set_verdict(qh, id, a, 0, NULL);
+    	return nfq_set_verdict(qh, id, NF_flag, 0, NULL);
 
 }
 
