@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <linux/types.h>
@@ -13,7 +14,18 @@
 
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
-u_int16_t a;
+using namespace std;
+
+u_int16_t a = NF_ACCEPT;
+
+void dump(unsigned char* buf, int size) {
+    int i;
+    for (i = 0; i < size; i++) {
+        if (i % 16 == 0)
+            printf("\n");
+        printf("%02x ", buf[i]);
+    }
+}
 
 static u_int32_t print_pkt (struct nfq_data *tb)
 {
@@ -33,12 +45,18 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 		data += (ipH->ip_hl)*4;
 		if(ipH->ip_p == 6){
 			struct libnet_tcp_hdr* tcpH = (struct libnet_tcp_hdr *) data;
-			if((ntohs(tcpH->th_sport) == 80) || (ntohs(tcpH->th_dport) == 80)) {
-				a = NF_DROP;
-			}
-			else	a = NF_ACCEPT;
+			u_int16_t len = (ipH->ip_hl * 4)+(tcpH->th_off * 4);
+			data += (tcpH->th_off * 4);
+			if()
+			u_int16_t count = 50;
+			if(ipH->ip_len - len < count) count = ipH->ip_len - len;
+			dump(data, count);
+			printf("\n");
+
+			printf("%s\n", data);
+			char* host = strstr((char *)data, "Host: ");
+
 		}
-		else	a = NF_ACCEPT;
 	}
 
 	return id;
